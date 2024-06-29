@@ -22,6 +22,42 @@ export async function setupWebGpu() {
         format: canvasFormat
     });
 
+    // Triangle vertices
+    const vertices = new Float32Array([
+        // X ,  Y,
+        -0.8, -0.8, // Blue triangle
+        0.8, -0.8,
+        0.8, 0.8,
+
+        -0.8, -0.8, // Red Triangle
+        0.8, 0.8,
+        -0.8, 0.8
+
+    ]);
+
+    // Create the buffer vertices data that will be used by Web GPU Buffer
+    const vertexBuffer = device.createBuffer({
+        label: 'Cell vertices',
+        size: vertices.byteLength, // Total size of Vertices in bytes (12 vertices * 4 bytes "size each float point" = 48 bytes)
+        usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+    })
+
+
+    // Copy the vertices data to the buffer memory
+    device.queue.writeBuffer(vertexBuffer, /*bufferOffset=*/ 0, vertices)
+
+
+    // Define vertices layout 
+    const vertexBufferLayout = {
+        arrayStride: 8, // How the vertices array is organized, each vertice have 8 byes (two float points), 
+        attributes: [{
+            format: 'float32x2',
+            offset: 0,
+            shaderLocation: 0,
+        }]
+    }
+
+
     // Clear canvas with render pass
     const encoder = device.createCommandEncoder()
 
@@ -32,6 +68,19 @@ export async function setupWebGpu() {
             clearValue: { r: 0, g: 0, b: 0.1, a: 1 },
             storeOp: 'store'
         }]
+    });
+
+    // Shaders
+    const cellShaderModule = device.createShaderModule({
+        label: 'Cell shader',
+        code: `
+            @vertex
+            fn vertexMain(@location(0) pos: vec2f ) -> @builtin(position) vec4f {
+                //   return vec4f(pos, 0, 1); // shorthand
+                return vec4f(pos.x, post.y, 0, 1);
+            }
+        
+        `
     })
 
     pass.end();
