@@ -35,16 +35,44 @@ export async function setupWebGpu() {
 
     ]);
 
-    // Create the buffer vertices data that will be used by Web GPU Buffer
+    // Triangle vertices
+    const vertices2 = new Float32Array([
+        // X ,  Y,
+        -0.8, -0.8, // Blue triangle
+        0.791, -0.791,
+        0.8, 0.8,
+
+        -0.8, -0.8, // Red Triangle
+        0.8, 0.8,
+        -0.791, 0.791
+
+    ]);
+
+    let c = 0
+    setInterval(() => {
+        if (c % 2 === 0) {
+            // Create the buffer vertices data that will be used by Web GPU Buffer
+            drawTriangle(device, vertices, context, canvasFormat);
+
+        } else {
+            // Create the buffer vertices data that will be used by Web GPU Buffer
+            drawTriangle(device, vertices2, context, canvasFormat);
+        }
+        c++;
+    }, 60);
+
+}
+
+function drawTriangle(device, vertices, context, canvasFormat) {
     const vertexBuffer = device.createBuffer({
         label: 'Cell vertices',
         size: vertices.byteLength, // Total size of Vertices in bytes (12 vertices * 4 bytes "size each float point" = 48 bytes)
         usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-    })
+    });
 
 
     // Copy the vertices data to the buffer memory
-    device.queue.writeBuffer(vertexBuffer, /*bufferOffset=*/ 0, vertices)
+    device.queue.writeBuffer(vertexBuffer, /*bufferOffset=*/ 0, vertices);
 
 
     // Define vertices layout 
@@ -55,11 +83,11 @@ export async function setupWebGpu() {
             offset: 0,
             shaderLocation: 0,
         }]
-    }
+    };
 
 
     // Clear canvas with render pass
-    const encoder = device.createCommandEncoder()
+    const encoder = device.createCommandEncoder();
 
     const pass = encoder.beginRenderPass({
         colorAttachments: [{
@@ -87,7 +115,7 @@ export async function setupWebGpu() {
 
         
         `
-    })
+    });
 
     const cellRenderPipeline = device.createRenderPipeline({
         label: 'Cell pipeline',
@@ -106,9 +134,9 @@ export async function setupWebGpu() {
         }
     });
 
-    pass.setPipeline(cellRenderPipeline)
-    pass.setVertexBuffer(0, vertexBuffer)
-    pass.draw(vertices.length / 2) // 6 Vertices
+    pass.setPipeline(cellRenderPipeline);
+    pass.setVertexBuffer(0, vertexBuffer);
+    pass.draw(vertices.length / 2); // 6 Vertices
 
 
 
@@ -116,5 +144,5 @@ export async function setupWebGpu() {
     pass.end();
 
     device.queue.submit([encoder.finish()]);
-
 }
+
