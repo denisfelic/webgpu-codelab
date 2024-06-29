@@ -77,11 +77,41 @@ export async function setupWebGpu() {
             @vertex
             fn vertexMain(@location(0) pos: vec2f ) -> @builtin(position) vec4f {
                 //   return vec4f(pos, 0, 1); // shorthand
-                return vec4f(pos.x, post.y, 0, 1);
+                return vec4f(pos.x, pos.y, 0, 1);
             }
+
+            @fragment
+            fn fragmentMain() -> @location(0) vec4f {
+                return vec4f(1, 0, 0, 1);
+            }
+
         
         `
     })
+
+    const cellRenderPipeline = device.createRenderPipeline({
+        label: 'Cell pipeline',
+        layout: 'auto',
+        vertex: {
+            module: cellShaderModule,
+            entryPoint: 'vertexMain',
+            buffers: [vertexBufferLayout]
+        },
+        fragment: {
+            module: cellShaderModule,
+            entryPoint: 'fragmentMain',
+            targets: [{
+                format: canvasFormat
+            }]
+        }
+    });
+
+    pass.setPipeline(cellRenderPipeline)
+    pass.setVertexBuffer(0, vertexBuffer)
+    pass.draw(vertices.length / 2) // 6 Vertices
+
+
+
 
     pass.end();
 
